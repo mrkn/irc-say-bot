@@ -1,0 +1,8 @@
+---
+server: irc.freenode.net
+port: 6667
+channel: "#ldd09fall"
+nick: say
+user: say
+real: Say Bot
+
