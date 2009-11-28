@@ -7,29 +7,29 @@ require 'MeCab'
 require 'csv'
 require 'yaml'
 
-DICT_PATH = File.join(File.dirname(__FILE__), '..', 'jsay', 'dic.csv')
-DICT = CSV.open(DICT_PATH, 'r').inject({}) {|hash, row|
-  hash[row[0]] = row[1]; next hash }.freeze
+class SayBot < Net::IRC::Client
+  DICT_PATH = File.join(File.dirname(__FILE__), '..', 'share', 'dic.csv')
+  DICT = CSV.open(DICT_PATH, 'r').inject({}) {|hash, row|
+    hash[row[0]] = row[1]; next hash }.freeze
 
-# see http://d.hatena.ne.jp/hitode909/20080124/1201144244
-def jsay(message)
-  $stderr.puts(message)
-  m1 = MeCab::Tagger.new('-Owakati')
-  m2 = MeCab::Tagger.new('-Oyomi')
-  $stderr.puts(m1.inspect)
-  $stderr.puts(m2.inspect)
-  output = m2.parse(m1.parse(message)).force_encoding('UTF-8')
-  $stderr.puts "->#{output}"
+  # see http://d.hatena.ne.jp/hitode909/20080124/1201144244
+  def say(message)
+    $stderr.puts(message)
+    m1 = MeCab::Tagger.new('-Owakati')
+    m2 = MeCab::Tagger.new('-Oyomi')
+    $stderr.puts(m1.inspect)
+    $stderr.puts(m2.inspect)
+    output = m2.parse(m1.parse(message)).force_encoding('UTF-8')
+    $stderr.puts "->#{output}"
 
-  DICT.each do |key, value|
-    output.gsub!(key, value)
+    DICT.each do |key, value|
+      output.gsub!(key, value)
+    end
+
+    $stderr.puts "->#{output}"
+    system("say", output)
   end
 
-  $stderr.puts "->#{output}"
-  system("say", output)
-end
-
-class SayBot < Net::IRC::Client
   def on_rpl_welcome(m)
     post JOIN, opts.channel
   end
@@ -39,7 +39,7 @@ class SayBot < Net::IRC::Client
     if message =~ /^say:\s+/
       message = $'
       post PRIVMSG, channel, "%s: say %s!" % [m.prefix.nick, message]
-      jsay(message)
+      say(message)
     end
   end
 end
